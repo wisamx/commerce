@@ -18,11 +18,9 @@ class OrderItemVariationTypeTest extends UnitTestCase {
    * ::covers evaluate.
    */
   public function testEvaluate() {
-    $entity_type_manager = $this->prophesize(EntityTypeManagerInterface::class);
-    $entity_type_manager = $entity_type_manager->reveal();
     $configuration = [];
     $configuration['variation_types'] = ['bag'];
-    $condition = new OrderItemVariationType($configuration, 'order_item_variation_type', ['entity_type' => 'commerce_order_item'], $entity_type_manager);
+    $condition = new OrderItemVariationType($configuration, 'order_item_variation_type', ['entity_type' => 'commerce_order_item']);
 
     // Order item with no purchasable entity.
     $order_item = $this->prophesize(OrderItemInterface::class);
