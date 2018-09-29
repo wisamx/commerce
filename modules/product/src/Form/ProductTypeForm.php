@@ -43,6 +43,7 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
     parent::__construct($trait_manager);
 
     $this->variationTypeStorage = $entity_type_manager->getStorage('commerce_product_variation_type');
+    $this->productTypeStorage = $entity_type_manager->getStorage('commerce_product_type');
     $this->entityFieldManager = $entity_field_manager;
   }
 
@@ -65,6 +66,7 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
     /** @var \Drupal\commerce_product\Entity\ProductTypeInterface $product_type */
     $product_type = $this->entity;
     $variation_types = $this->variationTypeStorage->loadMultiple();
+    $product_types = $this->productTypeStorage->loadMultiple();
     // Create an empty product to get the default status value.
     // @todo Clean up once https://www.drupal.org/node/2318187 is fixed.
     if ($this->operation == 'add') {
@@ -94,6 +96,13 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
       '#title' => $this->t('Description'),
       '#description' => $this->t('This text will be displayed on the <em>Add product</em> page.'),
       '#default_value' => $product_type->getDescription(),
+    ];
+    $form['parentProductType'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Parent product type'),
+	  //'#default_value' => $product_type->getParentProductTypeId(),
+      '#options' => EntityHelper::extractLabels($product_types),
+      '#disabled' => !$product_type->isNew(),
     ];
     $form['variationType'] = [
       '#type' => 'select',
@@ -144,6 +153,10 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $this->validateTraitForm($form, $form_state);
 
+    if (empty($form_state->getValue('parentProductType'))) {
+		  $form_state->setError($form['parentProductType'], $this->t('Select an parent product type.'));
+    }
+    
     if (empty($form_state->getValue('variationType'))) {
       $id = $form_state->getValue('id');
       if (!empty($this->entityTypeManager->getStorage('commerce_product_variation_type')->load($id))) {
@@ -207,6 +220,10 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
       commerce_product_add_stores_field($this->entity);
       commerce_product_add_body_field($this->entity);
       commerce_product_add_variations_field($this->entity);
+      /*commerce_product_copy_fields_from_parent($this->entity);
+        -- load parent product type fields: //$fields = field_entity_field_storage_info($parent_entity_type);
+        -- foreach field create a copy and add it to the new product type
+      */
     }
   }
 
